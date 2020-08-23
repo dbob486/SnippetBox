@@ -20,6 +20,8 @@ func (app *application) serverError(w http.ResponseWriter, err error) {
 // Request" when there's a problem with the request that the user sent.
 func (app *application) clientError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
+	fmt.Fprintln(w, status)
+
 }
 
 // For consistency, we'll also implement a notFound helper. This is simply a
