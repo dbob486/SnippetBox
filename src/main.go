@@ -25,7 +25,7 @@ type application struct {
 
 func main() {
 	dsn := flag.String("dsn", "web:another@/snippetbox?parseTime=true", "MySQL data source name")
-	addr := flag.String("addr", ":80", "HTTP network address")
+	addr := flag.String("addr", ":8080", "HTTP network address")
 	secret := flag.String("secret", "s6Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge", "Secret key")
 	flag.Parse()
 
@@ -63,7 +63,7 @@ func main() {
 
 	infoLog.Printf("Starting server on %s", *addr)
 	//serving file using custom server struct with
-	errorLog.Fatal(srv.ListenAndServe())
+	errorLog.Fatal(srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem"))
 }
 
 func openDB(dsn string) (*sql.DB, error) {
