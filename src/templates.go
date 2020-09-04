@@ -1,6 +1,7 @@
 package main
 
 import (
+	"danielgarcia.net/snippetbox/pkg/forms"
 	"danielgarcia.net/snippetbox/pkg/models"
 	"html/template"
 	"path/filepath"
@@ -8,10 +9,11 @@ import (
 )
 
 type templateData struct {
-	CurrentYear  int
-	Snippet *models.Snippet
-	Snippets []*models.Snippet
-
+	CurrentYear int
+	Flash       string
+	Form        *forms.Form
+	Snippet     *models.Snippet
+	Snippets    []*models.Snippet
 }
 
 // Create a humanDate function which returns a nicely formatted string
