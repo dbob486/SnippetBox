@@ -63,7 +63,8 @@ func main() {
 
 	infoLog.Printf("Starting server on %s", *addr)
 	//serving file using custom server struct with
-	errorLog.Fatal(srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem"))
+	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
+	errorLog.Fatal(err)
 }
 
 func openDB(dsn string) (*sql.DB, error) {
