@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"danielgarcia.net/snippetbox/pkg/models/mysql"
 	"database/sql"
 	"flag"
@@ -55,11 +56,27 @@ func main() {
 		templateCache: templateCache,
 	}
 
-	srv := &http.Server{
-		Addr:     *addr,
-		ErrorLog: errorLog,
-		Handler:  app.routes(),
+	// Initialize a tls.Config struct to hold the non-default TLS settings we want
+	// the server to use.
+	tlsConfig := &tls.Config{
+		PreferServerCipherSuites: true,
+		CurvePreferences:         []tls.CurveID{tls.X25519, tls.CurveP256},
 	}
+
+	// Set the server's TLSConfig field to use the tlsConfig variable we just
+	// created.
+	srv := &http.Server{
+		Addr:         *addr,
+		ErrorLog:     errorLog,
+		Handler:      app.routes(),
+		TLSConfig:    tlsConfig,
+		// Add Idle, Read and Write timeouts to the server.
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+
+
 
 	infoLog.Printf("Starting server on %s", *addr)
 	//serving file using custom server struct with
