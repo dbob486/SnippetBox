@@ -15,11 +15,11 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 	s, err := app.snippets.Latest()
 	if err != nil {
-		app.serverError(w, err)
+		app.ServerError(w, err)
 		return
 	}
 
-	app.render(w, r, "home.page.tmpl", &templateData{
+	app.Render(w, r, "home.page.tmpl", &templateData{
 		Snippets: s,
 	})
 }
@@ -27,27 +27,27 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.URL.Query().Get(":id"))
 	if err != nil || id < 1 {
-		app.notFound(w)
+		app.NotFound(w)
 		return
 	}
 
 	s, err := app.snippets.Get(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
-			app.notFound(w)
+			app.NotFound(w)
 		} else {
-			app.serverError(w, err)
+			app.ServerError(w, err)
 		}
 		return
 	}
 
-	app.render(w, r, "show.page.tmpl", &templateData{
+	app.Render(w, r, "show.page.tmpl", &templateData{
 		Snippet: s,
 	})
 }
 
 func (app *application) createSnippetForm(w http.ResponseWriter, r *http.Request) {
-	app.render(w, r, "create.page.tmpl", &templateData{
+	app.Render(w, r, "create.page.tmpl", &templateData{
 		// Pass a new empty forms.Form object to the template.
 		Form: forms.New(nil),
 	})
@@ -56,7 +56,7 @@ func (app *application) createSnippetForm(w http.ResponseWriter, r *http.Request
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
+		app.ClientError(w, http.StatusBadRequest)
 		return
 	}
 
@@ -70,7 +70,7 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 	// If the form isn't valid, redisplay the template passing in the
 	// form.Form object as the data.
 	if !form.Valid() {
-		app.render(w, r, "create.page.tmpl", &templateData{Form: form})
+		app.Render(w, r, "create.page.tmpl", &templateData{Form: form})
 		return
 	}
 
@@ -79,11 +79,72 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 	// the validated value for a particular form field.
 	id, err := app.snippets.Insert(form.Get("title"), form.Get("content"), form.Get("expires"))
 	if err != nil {
-		app.serverError(w, err)
+		app.ServerError(w, err)
 		return
 	}
 	app.session.Put(r, "flash", "Snippet successfully created!")
 
 
 	http.Redirect(w, r, fmt.Sprintf("/snippet/%d", id), http.StatusSeeOther)
+}
+
+func (app *application) signupUserForm(w http.ResponseWriter, r *http.Request) {
+	app.Render(w, r, "signup.page.tmpl", &templateData{
+		Form: forms.New(nil),
+	})
+}
+
+func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
+	// Parse the form data.
+	err := r.ParseForm()
+	if err != nil {
+		app.ClientError(w, http.StatusBadRequest)
+		return
+	}
+
+	// Validate the form contents using the form helper we made earlier.
+	form := forms.New(r.PostForm)
+	form.Required("name", "email", "password", "confirmPassword")
+	form.MaxLength("name", 255)
+	form.MaxLength("email", 255)
+	form.MatchesPattern("email", forms.EmailRX)
+	form.MinLength("password", 10)
+	form.MatchesPassword("password", "confirmPassword")
+
+	// If there are any errors, redisplay the signup form.
+	if !form.Valid() {
+		app.Render(w, r, "signup.page.tmpl", &templateData{Form: form})
+		return
+	}
+	// Try to create a new user record in the database. If the email already exists
+	// add an error message to the form and re-display it.
+	err = app.users.Insert(form.Get("name"), form.Get("email"), form.Get("password"))
+	if err != nil {
+		if errors.Is(err, models.ErrDuplicateEmail) {
+			form.Errors.Add("email", "Email already taken")
+			app.Render(w, r, "signup.page.tmpl", &templateData{Form: form})
+		} else {
+			app.ServerError(w, err)
+		}
+		return
+	}
+	// Otherwise add a confirmation flash message to the session confirming that
+	// their signup worked and asking them to log in.
+	app.session.Put(r, "flash", "Your signup was successful. Please log in.")
+
+	// And redirect the user to the login page.
+	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+}
+
+
+func (app *application) loginUserForm(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Display the user login form...")
+}
+
+func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Authenticate and login the user...")
+}
+
+func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Logout the user...")
 }
