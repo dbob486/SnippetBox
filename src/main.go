@@ -15,6 +15,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+type contextKey string
+
+const contextKeyIsAuthenticated = contextKey("isAuthenticated")
+
 //application struct holding all dependencies for accessibility across the application currently only our custom loggers
 type application struct {
 	errorLog      *log.Logger
@@ -26,8 +30,9 @@ type application struct {
 }
 
 func main() {
-	dsn := flag.String("dsn", "web:another@/snippetbox?parseTime=true", "MySQL data source name")
-	addr := flag.String("addr", ":8080", "HTTP network address")
+	dsn := flag.String("dsn", "snippetbox:mypassword@" +
+		"tcp(snippetbox1.chsxhrymwq6e.us-west-1.rds.amazonaws.com:3306)/snippetbox?parseTime=true", "MySQL data source name")
+	addr := flag.String("addr", ":243", "HTTPS network address")
 	secret := flag.String("secret", "s6Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge", "Secret key")
 	flag.Parse()
 
