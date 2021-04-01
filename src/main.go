@@ -11,9 +11,14 @@ import (
 	"net/http"
 	"os"
 	"time"
-
+	"github.com/subosito/gotenv"
 	_ "github.com/go-sql-driver/mysql"
 )
+
+
+func init() {
+	gotenv.Load()
+}
 
 type contextKey string
 
@@ -30,10 +35,10 @@ type application struct {
 }
 
 func main() {
-	dsn := flag.String("dsn", "snippetbox:mypassword@" +
+	dsn := flag.String("dsn", os.Getenv("DBNAME")+ ":" + os.Getenv("DBPASSWORD")+ "@" +
 		"tcp(snippetbox1.chsxhrymwq6e.us-west-1.rds.amazonaws.com:3306)/snippetbox?parseTime=true", "MySQL data source name")
 	addr := flag.String("addr", ":243", "HTTPS network address")
-	secret := flag.String("secret", "s6Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge", "Secret key")
+	secret := flag.String("secret", os.Getenv("SECRET_KEY"), "Secret key")
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
